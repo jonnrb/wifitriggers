@@ -2,6 +2,7 @@ pipeline:
   quay:
     image: plugins/docker
     repo: quay.io/jonnrb/autowyze
+    registry: quay.io
     username: $QUAY_USERNAME
     password: $QUAY_PASSWORD
     dockerfile: ./cmd/autowyze/Dockerfile
