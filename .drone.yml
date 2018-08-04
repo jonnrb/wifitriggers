@@ -3,7 +3,10 @@ pipeline:
     image: plugins/docker
     repo: quay.io/jonnrb/autowyze
     registry: quay.io
-    username: $quay_username
-    password: $quay_password
     dockerfile: ./cmd/autowyze/Dockerfile
     storage_driver: overlay2
+    secrets:
+      - source: quay_username
+        target: docker_username
+      - source: quay_password
+        target: docker_password
