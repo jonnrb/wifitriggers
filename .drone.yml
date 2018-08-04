@@ -1,7 +1,8 @@
 pipeline:
-  docker:
+  quay:
     image: plugins/docker
-    repo: jonnrb/autowyze
+    repo: quay.io/jonnrb/autowyze
+    username: $QUAY_USERNAME
+    passwork: $QUAY_PASSWORD
     dockerfile: ./cmd/autowyze/Dockerfile
     storage_driver: overlay2
-    secrets: [ docker_username, docker_password ]
