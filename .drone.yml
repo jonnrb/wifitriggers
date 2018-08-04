@@ -1,5 +1,5 @@
 pipeline:
-  docker_hostapd:
+  autowyze:
     image: plugins/docker
     repo: jonnrb/autowyze
     dockerfile: ./cmd/autowyze/Dockerfile
