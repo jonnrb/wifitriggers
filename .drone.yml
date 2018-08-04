@@ -1,0 +1,7 @@
+pipeline:
+  docker_hostapd:
+    image: plugins/docker
+    repo: jonnrb/autowyze
+    dockerfile: ./cmd/autowyze/Dockerfile
+    storage_driver: overlay2
+    secrets: [ docker_username, docker_password ]
