@@ -1,5 +1,5 @@
 pipeline:
-  autowyze:
+  docker:
     image: plugins/docker
     repo: jonnrb/autowyze
     dockerfile: ./cmd/autowyze/Dockerfile
