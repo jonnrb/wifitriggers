@@ -7,9 +7,9 @@ import (
 )
 
 type Driver struct {
-	APReader APReader
-	Engine   *Engine
-	Interval time.Duration
+	APReader     APReader
+	BindingChain BindingChain
+	Interval     time.Duration
 }
 
 func tickDuringContext(ctx context.Context, d time.Duration) <-chan time.Time {
@@ -35,7 +35,7 @@ func (d *Driver) Run(ctx context.Context) error {
 				log.Println("Could not get connected clients from AP:", err)
 			}
 
-			if err := d.Engine.Run(ctx, c); err != nil {
+			if err := d.BindingChain(c)(ctx); err != nil {
 				log.Println("Error running actions:", err)
 			}
 

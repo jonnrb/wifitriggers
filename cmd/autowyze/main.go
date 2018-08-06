@@ -61,10 +61,9 @@ func main() {
 
 	d := wifitriggers.Driver{
 		APReader: wifitriggers.HostapdReader{hostapd.NewHostapdControlClient(cc)},
-		Engine: new(wifitriggers.EngineBuilder).
-			Bind(wifitriggers.If(SomebodyIsHome).Then(s.OffAction())).
-			Bind(wifitriggers.If(NobodyIsHome).Then(s.OnAction())).
-			Build(),
+		BindingChain: wifitriggers.NilBindingChain.
+			AddBinding(wifitriggers.If(SomebodyIsHome).Then(s.OffAction())).
+			AddBinding(wifitriggers.If(NobodyIsHome).Then(s.OnAction())),
 		Interval: 2 * time.Second,
 	}
 	if err := d.Run(context.Background()); err != nil {

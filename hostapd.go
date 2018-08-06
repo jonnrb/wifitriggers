@@ -69,6 +69,7 @@ func connectedMACs(ctx context.Context, cli hostapd.HostapdControlClient) ([]net
 	return ret, nil
 }
 
+// Utility that parses a MAC address or panics.
 func MACMustParse(s string) net.HardwareAddr {
 	hwAddr, err := net.ParseMAC(s)
 	if err != nil {

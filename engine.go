@@ -1,50 +1,39 @@
 package wifitriggers
 
 import (
-	"context"
 	"net"
-
-	"golang.org/x/sync/errgroup"
 )
 
-type Engine struct {
-	bindings []Binding
-}
+// Represents a Cond bound to an Action. Can be created using a fluent syntax:
+//
+//   wifitriggers.If(someCond).Then(someAction)
+//
+type Binding func(connectedClients []net.HardwareAddr) Action
 
-type EngineBuilder struct {
-	e Engine
-}
+type BindingChain Binding
 
+var NilBindingChain = BindingChain(
+	func(connectedClients []net.HardwareAddr) Action { return NilAction })
+
+// Type alias used to create a Binding. Intended to be used as
+//
+//   wifitriggers.If(someCond).Then(someAction)
+//
 type If Cond
 
-type Binding struct {
-	Cond
-	Action
-}
-
 func (i If) Then(action Action) Binding {
-	return Binding{Cond(i), action}
-}
-
-func (eb *EngineBuilder) Bind(b Binding) *EngineBuilder {
-	eb.e.bindings = append(eb.e.bindings, b)
-	return eb
-}
-
-func (eb *EngineBuilder) Build() *Engine {
-	return &eb.e
-}
-
-func (e *Engine) Run(ctx context.Context, connectedClients []net.HardwareAddr) error {
-	grp, ctx := errgroup.WithContext(ctx)
-	for _, b := range e.bindings {
-		cond, action := b.Cond, b.Action
-		grp.Go(func() error {
-			if !cond(connectedClients) {
-				return nil
-			}
-			return action(ctx)
-		})
+	return func(connectedClients []net.HardwareAddr) Action {
+		if (Cond(i))(connectedClients) {
+			return action
+		} else {
+			return NilAction
+		}
 	}
-	return grp.Wait()
+}
+
+// Adds a Binding to the chain.
+func (c BindingChain) AddBinding(b Binding) BindingChain {
+	return func(connectedClients []net.HardwareAddr) Action {
+		return c(connectedClients).And(b(connectedClients))
+	}
 }

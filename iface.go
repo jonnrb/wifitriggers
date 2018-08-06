@@ -33,15 +33,19 @@ func (a Cond) And(b Cond) Cond {
 	}
 }
 
+// Does something and returns an error if there's a problem.
 type Action func(ctx context.Context) error
+
+// Does nothing.
+var NilAction = Action(func(ctx context.Context) error { return nil })
 
 type key int
 
 var actionGroupKey key
 
 // Returns an action that runs the two actions it is comprised of concurrently.
-// golang.org/x/sync/errgroup's semantics are used: the context will be
-// cancelled if any member action fails and the returned error will be the
+// golang.org/x/sync/errgroup.WithContext's semantics are used: the context will
+// be cancelled if any member action fails and the returned error will be the
 // error that caused the context to be cancelled.
 //
 //     actionA.And(actionB).And(actionC.And(actionD))
