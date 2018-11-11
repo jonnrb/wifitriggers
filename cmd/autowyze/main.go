@@ -14,18 +14,31 @@ import (
 	"google.golang.org/grpc"
 )
 
-var (
-	key     = flag.String("iftttKey", "", "IFTTT API (\"Maker\") key")
-	backend = flag.String("backend", "hostapd_grpc:8080", "hostapd_grpc backend")
-	macStrs = flag.String("trackedMACs", "", "MACs to consider as somebody \"home\"")
-)
+type Flags struct {
+	IFTTTKey string
+	Backend  string
+	MACs     []net.HardwareAddr
+}
 
-var macs []net.HardwareAddr
+func parseFlags() Flags {
+	var f Flags
+	flag.StringVar(&f.IFTTTKey, "iftttKey", "", "IFTTT API (\"Maker\") key")
+	flag.StringVar(&f.Backend, "backend", "hostapd_grpc:8080", "hostapd_grpc backend")
+	macStrs := flag.String("trackedMACs", "", "MACs to consider as somebody \"home\"")
 
-func isSomebodyHome(set []net.HardwareAddr) bool {
+	flag.Parse()
+
+	for _, macStr := range strings.Split(*macStrs, ",") {
+		f.MACs = append(f.MACs, wifitriggers.MACMustParse(macStr))
+	}
+
+	return f
+}
+
+func isSomebodyHome(f Flags, set []net.HardwareAddr) bool {
 	// If the sets intersect, somebody's home.
 	for _, a := range set {
-		for _, b := range macs {
+		for _, b := range f.MACs {
 			if bytes.Equal(a, b) {
 				return true
 			}
@@ -35,26 +48,22 @@ func isSomebodyHome(set []net.HardwareAddr) bool {
 }
 
 func main() {
-	flag.Parse()
-
-	for _, macStr := range strings.Split(*macStrs, ",") {
-		macs = append(macs, wifitriggers.MACMustParse(macStr))
-	}
+	f := parseFlags()
 
 	s := wifitriggers.SwitchOnIFTTT{
-		Key:    *key,
+		Key:    f.IFTTTKey,
 		OnCmd:  "arm_wyzecam",
 		OffCmd: "disarm_wyzecam",
 	}
 
 	var (
 		SomebodyIsHome = wifitriggers.Cond(
-			func(c []net.HardwareAddr) bool { return isSomebodyHome(c) })
+			func(c []net.HardwareAddr) bool { return isSomebodyHome(f, c) })
 		NobodyIsHome = wifitriggers.Cond(
-			func(c []net.HardwareAddr) bool { return !isSomebodyHome(c) })
+			func(c []net.HardwareAddr) bool { return !isSomebodyHome(f, c) })
 	)
 
-	cc, err := grpc.Dial(*backend, grpc.WithInsecure())
+	cc, err := grpc.Dial(f.Backend, grpc.WithInsecure())
 	if err != nil {
 		panic(err)
 	}
