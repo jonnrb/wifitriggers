@@ -37,3 +37,10 @@ func (c BindingChain) AddBinding(b Binding) BindingChain {
 		return c(connectedClients).And(b(connectedClients))
 	}
 }
+
+// Combines two chains.
+func (c BindingChain) And(other BindingChain) BindingChain {
+	return func(connectedClients []net.HardwareAddr) Action {
+		return c(connectedClients).And(other(connectedClients))
+	}
+}
